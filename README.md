@@ -143,5 +143,268 @@ name='" . $this->fields[$j]['name'] . "'></td></tr>";
 }
 ```
 
+File tersebut tidak dapat dieksekusi langsung, karena hanya berisi deklarasi class. Untuk
+menggunakannya perlu dilakukan include pada file lain yang akan menjalankan dan harus
+dibuat instance object terlebih dulu.
+
 ## PENJELASAN
 
+### 1. Class Form:
+
+#### - Properti:
+
+> $fields: Sebuah array yang menyimpan informasi tentang setiap field pada formulir. Setiap field memiliki nama (name) dan label (label).
+
+> $action: Menyimpan URL yang akan dijadikan nilai atribut action pada tag <form>.
+
+> $submit: Menyimpan teks yang akan dijadikan nilai atribut value pada tombol submit formulir.
+
+> $jumField: Menyimpan jumlah field pada formulir.
+
+#### - Metode:
+> __construct($action, $submit): Constructor yang digunakan untuk menginisialisasi properti $action dan $submit saat objek diinstansiasi.
+
+> displayForm(): Metode untuk menampilkan formulir HTML ke layar. Formulir ini memiliki field input teks untuk setiap field yang ditambahkan menggunakan metode addField().
+
+> addField($name, $label): Metode untuk menambahkan field baru ke dalam formulir. Setiap field memiliki nama dan label.
+
+### 2. Pembuatan Objek dan Penggunaan:
+
+```
+$myForm = new Form("process.php", "Submit Form");
+$myForm->addField("name", "Name");
+$myForm->addField("email", "Email");
+$myForm->addField("phone", "Phone Number");
+$myForm->displayForm();
+```
+
+Objek $myForm dibuat dari class Form. Kemudian, tiga field (Name, Email, dan Phone Number) ditambahkan ke dalam formulir menggunakan metode addField(). Terakhir, formulir ditampilkan ke layar menggunakan metode displayForm().
+
+# Contoh implementasi pemanggilan class library form.php
+# Buat file baru dengan nama form_input.php
+
+```
+<?php
+
+/**
+ * Program memanfaatkan Program 10.2 untuk membuat form inputan sederhana.
+ **/
+include "form.php";
+echo "<html><head><title>Mahasiswa</title></head><body>";
+$form = new Form("", "Input Form");
+$form->addField("txtnim", "Nim");
+$form->addField("txtnama", "Nama");
+$form->addField("txtalamat", "Alamat");
+echo "<h3>Silahkan isi form berikut ini :</h3>";
+$form->displayForm();
+echo "</body></html>";
+```
+
+## OUTPUT 
+![image](https://github.com/Aliyahasmarani/Lab10Web/assets/115197672/387e7831-ddf8-4fb8-b7e1-f723bb32ec7a)
+
+# Contoh lainnya untuk database connection dan query. Buat file dengan nama database.php
+
+```
+<?php
+class Database
+{
+    protected $host;
+    protected $user;
+    protected $password;
+    protected $db_name;
+    protected $conn;
+    public function __construct()
+    {
+        $this->getConfig();
+        $this->conn = new mysqli(
+            $this->host,
+            $this->user,
+            $this->password,
+            $this->db_name
+        );
+        if ($this->conn->connect_error) {
+            die("Connection failed: " . $this->conn->connect_error);
+        }
+    }
+    private function getConfig()
+    {
+        include_once("config.php");
+        $this->host = $config['host'];
+        $this->user = $config['username'];
+        $this->password = $config['password'];
+        $this->db_name = $config['db_name'];
+    }
+    public function query($sql)
+    {
+        return $this->conn->query($sql);
+    }
+    public function get($table, $where = null)
+    {
+        if ($where) {
+            $where = " WHERE " . $where;
+        }
+        $sql = "SELECT * FROM " . $table . $where;
+        $sql = $this->conn->query($sql);
+        $sql = $sql->fetch_assoc();
+        return $sql;
+    }
+    public function insert($table, $data)
+    {
+        if (is_array($data)) {
+            foreach ($data as $key => $val) {
+                $column[] = $key;
+                $value[] = "'{$val}'";
+            }
+            $columns = implode(",", $column);
+            $values = implode(",", $value);
+        }
+        $sql = "INSERT INTO " . $table . " (" . $columns . ") VALUES (" . $values . ")";
+        $sql = $this->conn->query($sql);
+        if ($sql == true) {
+            return $sql;
+        } else {
+            return false;
+        }
+    }
+    public function update($table, $data, $where)
+    {
+        $update_value = array(); // Inisialisasi sebagai array kosong
+
+        if (is_array($data)) {
+            foreach ($data as $key => $val) {
+                $update_value[] = "$key='{$val}'";
+            }
+        }
+
+        $update_value = implode(",", $update_value); // Konversi menjadi string
+
+        $sql = "UPDATE " . $table . " SET " . $update_value . " WHERE " . $where;
+        $result = $this->conn->query($sql);
+        return ($result) ? true : false;
+    }
+
+
+    public function delete($table, $filter)
+    {
+        $sql = "DELETE FROM " . $table . " " . $filter;
+        $sql = $this->conn->query($sql);
+        if ($sql == true) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+```
+
+## PENJELASAN
+
+### 1. Properti:
+
+```
+protected $host;
+protected $user;
+protected $password;
+protected $db_name;
+protected $conn;
+```
+Properti-properit ini menyimpan informasi terkait dengan koneksi database, seperti alamat host, username, password, nama database, dan objek koneksi MySQLi.
+
+### 2. Constructor (__construct):
+
+```
+public function __construct()
+{
+    $this->getConfig();
+    $this->conn = new mysqli(
+        $this->host,
+        $this->user,
+        $this->password,
+        $this->db_name
+    );
+    if ($this->conn->connect_error) {
+        die("Connection failed: " . $this->conn->connect_error);
+    }
+}
+```
+
+> Constructor ini dipanggil ketika objek dari class Database dibuat.
+>
+> Memanggil metode getConfig() untuk mendapatkan konfigurasi koneksi dari file "config.php".
+>
+> Membuat objek koneksi MySQLi menggunakan informasi yang telah diambil.
+>
+> Jika koneksi gagal, program akan berhenti dan menampilkan pesan kesalahan.
+
+### 3. Metode getConfig():
+
+```
+private function getConfig()
+{
+    include_once("config.php");
+    $this->host = $config['host'];
+    $this->user = $config['username'];
+    $this->password = $config['password'];
+    $this->db_name = $config['db_name'];
+}
+```
+
+> Metode ini digunakan untuk mengambil konfigurasi koneksi dari file "config.php".
+>
+> File "config.php" seharusnya berisi definisi variabel $config yang menyimpan informasi koneksi.
+
+### 4. Metode query($sql):
+
+```
+public function query($sql)
+{
+    return $this->conn->query($sql);
+}
+```
+Metode ini digunakan untuk mengeksekusi query SQL pada database.
+
+### 5. Metode get($table, $where = null):
+
+```
+public function get($table, $where = null)
+{
+    // ... (mendapatkan data dari tabel dengan atau tanpa kondisi)
+}
+```
+> Metode ini digunakan untuk mengambil data dari tabel.
+>
+> Jika $where diberikan, akan ditambahkan ke dalam query sebagai kondisi WHERE.
+
+### 6. Metode insert($table, $data):
+
+```
+public function insert($table, $data)
+{
+    // ... (menyisipkan data ke dalam tabel)
+}
+```
+
+Metode ini digunakan untuk menyisipkan data baru ke dalam tabel.
+
+### 7. Metode update($table, $data, $where):
+
+```
+public function update($table, $data, $where)
+{
+    // ... (mengupdate data di dalam tabel berdasarkan kondisi WHERE)
+}
+```
+
+Metode ini digunakan untuk memperbarui data di dalam tabel berdasarkan kondisi WHERE.
+
+### 8. Metode delete($table, $filter):
+
+```
+public function delete($table, $filter)
+{
+    // ... (menghapus data dari tabel berdasarkan kondisi WHERE)
+}
+```
+
+Metode ini digunakan untuk menghapus data dari tabel berdasarkan kondisi WHERE.
