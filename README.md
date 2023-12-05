@@ -408,3 +408,7 @@ public function delete($table, $filter)
 ```
 
 Metode ini digunakan untuk menghapus data dari tabel berdasarkan kondisi WHERE.
+
+# Pertanyaan dan Tugas
+Implementasikan konsep modularisasi pada kode program pada praktukum sebelumnya
+dengan menggunakan class library untuk form dan database connection.
